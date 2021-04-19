@@ -1,0 +1,22 @@
+{
+  "name": "ScaleStabilizer",
+  "version": "1.0.0",
+  "description": "A library to stabilize load cell readings",
+  "keywords": "scale, load cell, HC711",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/GatCode/ScaleStabilizer.git"
+  },
+  "authors":
+  [
+    {
+      "name": "GatCode",
+      "email": "gatcode@wdw.one",
+      "url": "https://www.gatcode.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "platforms": "*"
+}
