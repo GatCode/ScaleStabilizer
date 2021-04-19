@@ -1,6 +1,5 @@
 <p align="center">
-  <!-- <img width="300" src="assets/logo.png"> -->
-  <h1 align="center">ScaleStabilizer</h1>
+  <img width="500" src="assets/logo.png">
   <h3 align="center">Simple library to stabilize load cell readings</h3></br>
   <p align="center">
     <img alt="license" src="https://img.shields.io/badge/license-MIT-blue">
