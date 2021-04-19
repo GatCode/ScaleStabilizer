@@ -3,9 +3,10 @@
 
 #include "Arduino.h"
 
-class ScaleStabilizer {
+class ScaleStabilizer
+{
 private:
-  double* _window;
+  double *_window;
   int _windowSize;
   double _weightThreshold;
   int _forceOverwrite;
@@ -25,6 +26,16 @@ private:
   bool isBufferMonotone();
 
 public:
+  /*!
+   * @brief Construct a new Scale Stabilizer object
+   */
+  ScaleStabilizer();
+
+  /*!
+   * @brief Destroy the Scale Stabilizer object
+   */
+  ~ScaleStabilizer();
+
   /*!
    * @brief ScaleStabilizer begin initializer
    * @param windowSize represents the size of the moving window
