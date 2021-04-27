@@ -1,12 +1,13 @@
 #include "ScaleStabilizer.h"
 
 /*!
- * @brief Construct a new Scale Stabilizer:: S Cale Stabilizer object
+ * @brief construct a new ScaleStabilizer:: Scale Stabilizer object
  */
-ScaleStabilizer::SCaleStabilizer()
-{
-}
+ScaleStabilizer::ScaleStabilizer() {}
 
+/*!
+ * @brief deconstruct a ScaleStabilizer object
+ */
 ScaleStabilizer::~ScaleStabilizer()
 {
   delete _window;
@@ -36,9 +37,10 @@ bool ScaleStabilizer::isBufferMonotone()
   {
     if (_window[i] != _window[0])
     {
-      break;
+      return false;
     }
   }
+  return true;
 }
 
 /*!
