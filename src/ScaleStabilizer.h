@@ -12,18 +12,14 @@ private:
   int _forceOverwrite;
   int _currentReadingIdx;
   double _lastOutputValue;
+  double _lastCodeValue;
+  int _abortCounter;
 
   /*!
-   * @brief Returns the average
-   * @return Returns the average of the moving window
+   * @brief Returns the M-2 average
+   * @return Returns the M-2 average of the moving window
    */
   double getAvg();
-
-  /*!
-   * @brief Returns true if moving window contains monotone elements 
-   * @return True if all elements have the same value
-   */
-  bool isBufferMonotone();
 
 public:
   /*!

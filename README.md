@@ -15,6 +15,10 @@ Since the usage of load cells for accurate weight measurement is always correlat
 
 This library provides an easy way to accommodate for these errors without sacrificing measurement speed or the implementation of accurate timing measurements.
 
+Below you can see an example how the ScaleStabilizer can improve the reading stability in a real-world project.
+
+![](assets/ScaleStabilizer.gif)
+
 The idea for the two basic algorithms behind this library were borrowed from *Colm Slattery* *and Mariah Nie's* [A Reference Design for High-Performance, Low-Cost Weigh Scales | Analog Devices](https://www.analog.com/en/analog-dialogue/articles/a-reference-design-for-weigh-scales.html), which describes an excellent way to solve these problems.
 
 ## Basic principle
@@ -41,8 +45,8 @@ const int SCK_PIN = 22;
 HX711 scale;
 
 // Scale Stabilizer
-const int WINDOW_SIZE = 10;
-const double WEIGHT_THRESHOLD = 0.01;
+const int WINDOW_SIZE = 12;
+const double WEIGHT_THRESHOLD = 0.05;
 ScaleStabilizer stabilizer;
 
 void setup() {

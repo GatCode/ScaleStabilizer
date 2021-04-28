@@ -7,8 +7,8 @@ const int SCK_PIN = 22;
 HX711 scale;
 
 // Scale Stabilizer
-const int WINDOW_SIZE = 10;
-const double WEIGHT_THRESHOLD = 0.01;
+const int WINDOW_SIZE = 12;
+const double WEIGHT_THRESHOLD = 0.05;
 ScaleStabilizer stabilizer;
 
 void setup() {

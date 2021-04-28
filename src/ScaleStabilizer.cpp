@@ -14,100 +14,26 @@ ScaleStabilizer::~ScaleStabilizer()
 }
 
 /*!
- * @brief simple average calculation
+ * @brief M-2 average calculation
  */
 double ScaleStabilizer::getAvg()
 {
-  double sum = 0;
-
-  for (int i = 0; i < _windowSize; i++)
-  {
-    sum += _window[i];
-  }
-
-  return sum / _windowSize;
-}
-
-/*!
- * @brief checks if all the elements in the moving _window are the same
- */
-bool ScaleStabilizer::isBufferMonotone()
-{
-  for (int i = 0; i < _windowSize; i++)
-  {
-    if (_window[i] != _window[0])
-    {
-      return false;
-    }
-  }
-  return true;
-}
-
-/*!
- * @brief init of the stabilizer
- */
-void ScaleStabilizer::begin(int windowSize, double weightThreshold)
-{
-  _windowSize = windowSize;
-  _weightThreshold = weightThreshold;
-  _window = new double[_windowSize];
-  _forceOverwrite = _windowSize;
-  _currentReadingIdx = 0;
-  _lastOutputValue = 0.0;
-}
-
-/*!
- * @brief add a new ADC reading to the moving _window by replacing the olest one
- * but if the moving _window is empty or needs to be overwritten, force overwrite is executed
- */
-void ScaleStabilizer::add(double reading)
-{
-  if (_forceOverwrite > 0 || isBufferMonotone())
-  {
-    int oldestReadingIdx = (_currentReadingIdx + 1) % _windowSize;
-    _window[oldestReadingIdx] = reading;
-    _currentReadingIdx = oldestReadingIdx;
-    _forceOverwrite--;
-    return;
-  }
-
-  if (abs(reading - getAvg()) < _weightThreshold)
-  {
-    int oldestReadingIdx = (_currentReadingIdx + 1) % _windowSize;
-    _window[oldestReadingIdx] = reading;
-    _currentReadingIdx = oldestReadingIdx;
-    return;
-  }
-
-  // reading index just before the last one
-  int nextToLastReadingIdx = _currentReadingIdx - 1 < 0 ? _windowSize : (_currentReadingIdx - 1) % _windowSize;
-
-  if (abs(_window[nextToLastReadingIdx] - getAvg()) > _weightThreshold)
-  {
-    // replace 75% of the data in the filter _window with fresh readings
-    _forceOverwrite = _windowSize * 0.75;
-  }
-
-  // everything else is probably just noise
-}
-
-/*!
- * @brief returns the stabilized average reading from the moving _window
- */
-double ScaleStabilizer::getStablilizedReading(double displayResolution, int decimalPlaces)
-{
   // find min and max values
   int minIdx = 0;
+  double minReading = _window[minIdx];
   int maxIdx = 0;
+  double maxReading = _window[maxIdx];
   for (int i = 0; i < _windowSize; i++)
   {
-    if (_window[i] < minIdx)
+    if (_window[i] < minReading)
     {
       minIdx = i;
+      minReading = _window[i];
     }
-    if (_window[i] > maxIdx)
+    if (_window[i] > maxReading)
     {
       maxIdx = i;
+      maxReading = _window[i];
     }
   }
 
@@ -122,30 +48,101 @@ double ScaleStabilizer::getStablilizedReading(double displayResolution, int deci
     sum += _window[i];
   }
 
-  // calc cleaned average
-  double cleanedAverage = sum / (_windowSize - 2);
+  return sum / (_windowSize - 2);
+}
+
+/*!
+ * @brief init of the stabilizer
+ */
+void ScaleStabilizer::begin(int windowSize, double weightThreshold)
+{
+  _windowSize = windowSize;
+  _weightThreshold = weightThreshold;
+  _window = new double[_windowSize];
+  _forceOverwrite = _windowSize;
+  _currentReadingIdx = 0;
+  _lastOutputValue = 0.0;
+  _abortCounter = _windowSize / 2;
+
+  for (int i = 0; i < _windowSize; i++)
+  {
+    _window[i] = 0.0;
+  }
+}
+
+/*!
+ * @brief add a new ADC reading to the moving _window by replacing the olest one
+ * but if the moving _window is empty or needs to be overwritten, force overwrite is executed
+ */
+void ScaleStabilizer::add(double reading)
+{
+  if (_forceOverwrite > 0)
+  {
+    int oldestReadingIdx = (_currentReadingIdx + 1) % _windowSize;
+    _window[oldestReadingIdx] = reading;
+    _currentReadingIdx = oldestReadingIdx;
+    _forceOverwrite--;
+    return;
+  }
+
+  if (abs(reading - getAvg()) < _weightThreshold)
+  {
+    int oldestReadingIdx = (_currentReadingIdx + 1) % _windowSize;
+    _window[oldestReadingIdx] = reading;
+    _currentReadingIdx = oldestReadingIdx;
+    _abortCounter = _abortCounter < _windowSize / 2 ? _abortCounter++ : _abortCounter;
+    return;
+  }
+
+  // reading index just before the last one
+  int nextToLastReadingIdx = _currentReadingIdx - 1 < 0 ? _windowSize : (_currentReadingIdx - 1) % _windowSize;
+
+  if (abs(_window[nextToLastReadingIdx] - getAvg()) > _weightThreshold)
+  {
+    // replace all the data in the filter _window with fresh readings for the next six cycles
+    _forceOverwrite = _windowSize * 6;
+    return;
+  }
+
+  // everything else is probably just noise but abort if stuck
+  if (_abortCounter <= 0)
+  {
+    _forceOverwrite = _windowSize;
+    _abortCounter = _windowSize / 2;
+  }
+  _abortCounter--;
+}
+
+/*!
+ * @brief returns the stabilized average reading from the moving _window
+ */
+double ScaleStabilizer::getStablilizedReading(double displayResolution, int decimalPlaces)
+{
+  double codeValue = getAvg();
+  double outputValue = codeValue;
 
   // remove negative numbers and set to 0 if close to 0
-  if (cleanedAverage < 0.5)
+  if (outputValue < 0.5)
   {
-    cleanedAverage = 0.0;
+    outputValue = 0.0;
   }
 
   // round to given decimal places
   float scale = pow(10, decimalPlaces);
-  cleanedAverage = round(cleanedAverage * scale) / scale;
+  outputValue = round(outputValue * scale) / scale;
 
   // perform the output flicker reduction
-  if (_lastOutputValue == cleanedAverage)
+  if (_lastOutputValue == outputValue)
   {
-    return cleanedAverage;
+    _lastCodeValue = codeValue;
+    return _lastOutputValue;
   }
 
-  if (abs(cleanedAverage - _lastOutputValue) < displayResolution)
+  if (abs(codeValue - _lastCodeValue) > displayResolution)
   {
-    return _lastOutputValue; // probably was just noise - return the old measurement
+    _lastCodeValue = codeValue;
+    _lastOutputValue = outputValue;
   }
 
-  _lastOutputValue = cleanedAverage;
-  return cleanedAverage;
+  return _lastOutputValue;
 }
