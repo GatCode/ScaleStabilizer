@@ -90,7 +90,10 @@ void ScaleStabilizer::add(double reading)
     int oldestReadingIdx = (_currentReadingIdx + 1) % _windowSize;
     _window[oldestReadingIdx] = reading;
     _currentReadingIdx = oldestReadingIdx;
-    _abortCounter = _abortCounter < _windowSize / 2 ? _abortCounter++ : _abortCounter;
+    if (_abortCounter < _windowSize / 2)
+    {
+      _abortCounter++;
+    }
     return;
   }
 
