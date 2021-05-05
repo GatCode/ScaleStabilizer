@@ -124,12 +124,6 @@ double ScaleStabilizer::getStablilizedReading(double displayResolution, int deci
   double codeValue = getAvg();
   double outputValue = codeValue;
 
-  // remove negative numbers and set to 0 if close to 0
-  if (outputValue < 0.5)
-  {
-    outputValue = 0.0;
-  }
-
   // round to given decimal places
   float scale = pow(10, decimalPlaces);
   outputValue = round(outputValue * scale) / scale;
